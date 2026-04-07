@@ -1,0 +1,4 @@
+certs/
+client.ovpn
+*.apk
+*.der
