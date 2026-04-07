@@ -2,6 +2,16 @@
 
 Route all Android (phone or emulator) traffic through Burp Suite via OpenVPN.
 
+```text
+Android
+  ↓ (OpenVPN)
+tun0 (container)
+  ↓ (iptables DNAT 80/443)
+Burp Suite (host:8084)
+  ↓
+Internet
+```
+
 ## Prerequisites
 
 - podman
