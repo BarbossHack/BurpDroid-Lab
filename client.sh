@@ -2,12 +2,11 @@
 
 set -euo pipefail
 
-rm -rf ./certs
-podman cp ovpn-server:/etc/openvpn/certs/ ./certs
+CERTS_DIR="$PWD/docker/certs"
 
-ca=$(cat ./certs/ca.crt | sed -e '/BEGIN CERTIFICATE/,/END CERTIFICATE/!d')
-cert=$(cat ./certs/client.crt | sed -e '/BEGIN CERTIFICATE/,/END CERTIFICATE/!d')
-key=$(cat ./certs/client.key | sed -e '/BEGIN PRIVATE KEY/,/END PRIVATE KEY/!d')
+ca=$(cat "$CERTS_DIR/ca.crt" | sed -e '/BEGIN CERTIFICATE/,/END CERTIFICATE/!d')
+cert=$(cat "$CERTS_DIR/client.crt" | sed -e '/BEGIN CERTIFICATE/,/END CERTIFICATE/!d')
+key=$(cat "$CERTS_DIR/client.key" | sed -e '/BEGIN PRIVATE KEY/,/END PRIVATE KEY/!d')
 
 # get local ip, tricky, but better than 'ip a | grep ...'
 host_ip=$(ip route get 1.1.1.1 | awk '{print $7; exit}')
