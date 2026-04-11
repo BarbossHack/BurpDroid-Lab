@@ -14,7 +14,7 @@ Internet
 
 ## Prerequisites
 
-- podman
+- podman/docker
 - adb
 
 ## Usage
