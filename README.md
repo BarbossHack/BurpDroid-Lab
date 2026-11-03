@@ -22,21 +22,23 @@ Internet
 1. Configure the Burp Suite proxy to listen on port `8084` on `All interfaces`, and enable `Support invisible proxying` in `Request handling`
 2. Setup the namespace:
 
-`./ns-setup.sh`
+```bash
+./ns.sh setup
+```
 
-3. Open one or more shell in this namespace:
+3. Run the emulator in the namespace:
 
-`sudo ip netns exec burpns sudo -u "$USER" bash`
+```bash
+./ns.sh enter
+emulator -avd Pixel_9a # (list available avds: `emulator -list-avds`)
+```
 
-4. Run the emulator from this new shell:
+5. From another terminal, push the Burp cert to the AVD and then import it into the `CA certificates` Android setting:
 
-`emulator -avd Pixel_9a`
-
-(_list available avds_: `emulator -list-avds`)
-
-5. From an other namespace shell, push the Burp cert to the AVD and then import it into the `CA certificates` Android setting:
-
-`adb push burp.der /storage/emulated/0/Download/`
+```bash
+./ns.sh enter
+adb push burp.der /storage/emulated/0/Download/
+```
 
 ## With OpenVPN
 

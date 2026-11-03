@@ -18,31 +18,30 @@ function reset() {
 if [ "${1:-}" == "reset" ]; then
 	reset
 	exit 0
-fi
+elif [ "${1:-}" == "setup" ]; then
+	reset
 
-reset
+	# Create namespace and veth pair
+	sudo ip netns add $NETNS
+	sudo ip link add $IFHOST type veth peer name $IFNS netns $NETNS
 
-# Create namespace and veth pair
-sudo ip netns add $NETNS
-sudo ip link add $IFHOST type veth peer name $IFNS netns $NETNS
+	sudo ip addr add 10.200.1.1/24 dev $IFHOST
+	sudo ip link set $IFHOST up
 
-sudo ip addr add 10.200.1.1/24 dev $IFHOST
-sudo ip link set $IFHOST up
+	sudo ip -n $NETNS addr add 10.200.1.2/24 dev $IFNS
+	sudo ip -n $NETNS link set $IFNS up
+	sudo ip -n $NETNS link set lo up
+	sudo ip -n $NETNS route add default via 10.200.1.1
 
-sudo ip -n $NETNS addr add 10.200.1.2/24 dev $IFNS
-sudo ip -n $NETNS link set $IFNS up
-sudo ip -n $NETNS link set lo up
-sudo ip -n $NETNS route add default via 10.200.1.1
+	# Namespace DNS resolution
+	sudo mkdir -p /etc/netns/$NETNS
+	echo "nameserver 1.1.1.1" | sudo tee /etc/netns/$NETNS/resolv.conf >/dev/null
 
-# Namespace DNS resolution
-sudo mkdir -p /etc/netns/$NETNS
-echo "nameserver 1.1.1.1" | sudo tee /etc/netns/$NETNS/resolv.conf >/dev/null
+	# IP forwarding
+	sudo sysctl -qw net.ipv4.ip_forward=1
 
-# IP forwarding
-sudo sysctl -qw net.ipv4.ip_forward=1
-
-# NAT rules for redirecting traffic to Burp Suite
-sudo nft -f - <<EOF
+	# NAT rules for redirecting traffic to Burp Suite
+	sudo nft -f - <<EOF
 table ip $NFT {
     chain postrouting {
         type nat hook postrouting priority 100;
@@ -64,6 +63,10 @@ table ip $NFT {
 }
 EOF
 
-if [ ! -f burp.der ]; then
-	curl -sL "http://localhost:$BURP_PORT/cert" -o burp.der
+	if [ ! -f burp.der ]; then
+		curl -sL "http://localhost:$BURP_PORT/cert" -o burp.der
+	fi
+
+elif [ "${1:-}" == "enter" ]; then
+	sudo ip netns exec burpns sudo -u "$USER" bash -c "echo '> New namespace shell >>' && exec bash"
 fi
